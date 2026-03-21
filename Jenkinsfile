@@ -15,14 +15,14 @@ pipeline {
 
         stage('Frontend: Install & Build') {
             steps {
-                // High-compatibility quoting for nested shell commands
-                sh "docker run --rm -v \$(pwd):/app -w /app node:20-alpine sh -c 'npm install && npm run build'"
+                // Triple-single-quotes avoid all Groovy vs Shell quoting issues
+                sh '''docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"'''
             }
         }
 
         stage('Backend: Install') {
             steps {
-                sh "docker run --rm -v \$(pwd):/app -w /app/backend node:20-alpine sh -c 'npm install'"
+                sh '''docker run --rm -v $(pwd):/app -w /app/backend node:20-alpine sh -c "npm install"'''
             }
         }
 
