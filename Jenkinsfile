@@ -13,21 +13,10 @@ pipeline {
             }
         }
 
-        stage('Frontend: Install & Build') {
-            steps {
-                // Triple-single-quotes avoid all Groovy vs Shell quoting issues
-                sh '''docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"'''
-            }
-        }
-
-        stage('Backend: Install') {
-            steps {
-                sh '''docker run --rm -v $(pwd):/app -w /app/backend node:20-alpine sh -c "npm install"'''
-            }
-        }
-
         stage('Docker: Build Images') {
             steps {
+                // The Dockerfiles already handle 'npm install' and 'npm run build'
+                // via multi-stage builds. We only need to run the build command.
                 sh "docker build -t ${IMAGE_NAME_FRONTEND}:${BUILD_NUMBER} ."
                 sh "docker build -t ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER} ./backend"
             }
