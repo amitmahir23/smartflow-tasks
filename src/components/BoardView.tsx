@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTasksByProject } from "@/lib/store";
-import { Task, TaskStatus } from "@/lib/types";
+import { TaskStatus } from "@/lib/types";
 import { KanbanColumn } from "./KanbanColumn";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 
@@ -13,15 +14,20 @@ interface BoardViewProps {
 const STATUSES: TaskStatus[] = ["todo", "in-progress", "done"];
 
 export function BoardView({ projectId, projectName, onBack }: BoardViewProps) {
-  const [tasks, setTasks] = useState<Task[]>(() => getTasksByProject(projectId));
+  const queryClient = useQueryClient();
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ["tasks", projectId],
+    queryFn: () => getTasksByProject(projectId),
+  });
 
   const refresh = useCallback(() => {
-    setTasks(getTasksByProject(projectId));
-  }, [projectId]);
+    queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+  }, [queryClient, projectId]);
 
   const grouped = STATUSES.reduce(
     (acc, s) => ({ ...acc, [s]: tasks.filter((t) => t.status === s) }),
-    {} as Record<TaskStatus, Task[]>
+    {} as Record<TaskStatus, typeof tasks>
   );
 
   return (
@@ -39,11 +45,17 @@ export function BoardView({ projectId, projectName, onBack }: BoardViewProps) {
         </div>
       </header>
       <main className="flex-1 container py-8">
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {STATUSES.map((status) => (
-            <KanbanColumn key={status} status={status} tasks={grouped[status]} onUpdate={refresh} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center p-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {STATUSES.map((status) => (
+              <KanbanColumn key={status} status={status} tasks={grouped[status]} onUpdate={refresh} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

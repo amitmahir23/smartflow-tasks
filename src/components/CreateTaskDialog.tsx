@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createTask } from "@/lib/store";
-import { TaskStatus } from "@/lib/types";
+import { TaskStatus, Task } from "@/lib/types";
 import { Plus } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CreateTaskDialogProps {
   projectId: string;
@@ -22,10 +23,26 @@ export function CreateTaskDialog({ projectId, onCreated }: CreateTaskDialogProps
   const [assignee, setAssignee] = useState("");
   const [deadline, setDeadline] = useState("");
 
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (data: Omit<Task, "id" | "createdAt">) => createTask(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      setTitle("");
+      setDescription("");
+      setStatus("todo");
+      setAssignee("");
+      setDeadline("");
+      setOpen(false);
+      onCreated();
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    createTask({
+    createMutation.mutate({
       title: title.trim(),
       description: description.trim() || undefined,
       status,
@@ -33,21 +50,14 @@ export function CreateTaskDialog({ projectId, onCreated }: CreateTaskDialogProps
       deadline: deadline || undefined,
       projectId,
     });
-    setTitle("");
-    setDescription("");
-    setStatus("todo");
-    setAssignee("");
-    setDeadline("");
-    setOpen(false);
-    onCreated();
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" className="gap-1.5" disabled={createMutation.isPending}>
           <Plus className="h-4 w-4" />
-          Add Task
+          {createMutation.isPending ? "Adding..." : "Add Task"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -84,7 +94,9 @@ export function CreateTaskDialog({ projectId, onCreated }: CreateTaskDialogProps
             <Label htmlFor="deadline">Deadline</Label>
             <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
           </div>
-          <Button type="submit" className="w-full">Create Task</Button>
+          <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+            {createMutation.isPending ? "Creating..." : "Create Task"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

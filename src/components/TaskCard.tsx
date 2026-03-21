@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Calendar, Trash2, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface TaskCardProps {
   task: Task;
@@ -18,17 +19,32 @@ const nextStatus: Record<TaskStatus, TaskStatus | null> = {
 
 export function TaskCard({ task, onUpdate }: TaskCardProps) {
   const next = nextStatus[task.status];
+  const queryClient = useQueryClient();
+
+  const updateMutation = useMutation({
+    mutationFn: (newStatus: TaskStatus) => updateTaskStatus(task.id, newStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", task.projectId] });
+      onUpdate();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTask(task.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", task.projectId] });
+      onUpdate();
+    },
+  });
 
   const handleAdvance = () => {
     if (next) {
-      updateTaskStatus(task.id, next);
-      onUpdate();
+      updateMutation.mutate(next);
     }
   };
 
   const handleDelete = () => {
-    deleteTask(task.id);
-    onUpdate();
+    deleteMutation.mutate();
   };
 
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== "done";
@@ -39,13 +55,16 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className="group rounded-lg border bg-card p-3.5 shadow-sm hover:shadow-md transition-shadow"
+      className={`group rounded-lg border bg-card p-3.5 shadow-sm transition-shadow ${
+        updateMutation.isPending || deleteMutation.isPending ? "opacity-50" : "hover:shadow-md"
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
         <h4 className="font-semibold text-sm text-card-foreground leading-snug">{task.title}</h4>
         <Button
           variant="ghost"
           size="icon"
+          disabled={deleteMutation.isPending}
           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
           onClick={handleDelete}
         >
@@ -76,6 +95,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
           <Button
             variant="ghost"
             size="icon"
+            disabled={updateMutation.isPending}
             className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
             onClick={handleAdvance}
             title={`Move to ${COLUMN_CONFIG[next].label}`}

@@ -13,12 +13,25 @@ interface LoginScreenProps {
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
-    const user = loginUser(name.trim(), email.trim());
-    onLogin(user);
+    
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const user = await loginUser(name.trim(), email.trim());
+      onLogin(user);
+    } catch (err) {
+      setError("Failed to login. Please ensure the backend server is running.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,11 +54,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" required />
           </div>
-          <Button type="submit" className="w-full">Get Started</Button>
+          
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Get Started"}
+          </Button>
         </form>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          Demo mode — no real authentication
+          Connecting to MongoDB backend...
         </p>
       </div>
     </div>

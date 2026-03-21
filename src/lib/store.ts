@@ -1,14 +1,7 @@
 import { Task, Project, User, TaskStatus } from "./types";
 
-const STORAGE_KEYS = {
-  user: "tm_user",
-  projects: "tm_projects",
-  tasks: "tm_tasks",
-};
-
-function generateId() {
-  return crypto.randomUUID();
-}
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const STORAGE_KEYS = { user: "tm_user" };
 
 // User
 export function getUser(): User | null {
@@ -16,8 +9,14 @@ export function getUser(): User | null {
   return raw ? JSON.parse(raw) : null;
 }
 
-export function loginUser(name: string, email: string): User {
-  const user: User = { id: generateId(), name, email };
+export async function loginUser(name: string, email: string): Promise<User> {
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email }),
+  });
+  if (!res.ok) throw new Error("Login failed");
+  const user = await res.json();
   localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
   return user;
 }
@@ -27,50 +26,67 @@ export function logoutUser() {
 }
 
 // Projects
-export function getProjects(): Project[] {
-  const raw = localStorage.getItem(STORAGE_KEYS.projects);
-  return raw ? JSON.parse(raw) : [];
+export async function getProjects(): Promise<Project[]> {
+  const user = getUser();
+  const userId = user ? user.id : "";
+  const res = await fetch(`${API_URL}/projects?userId=${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch projects");
+  return res.json();
 }
 
-export function createProject(name: string, description?: string): Project {
-  const projects = getProjects();
-  const project: Project = { id: generateId(), name, description, createdAt: new Date().toISOString() };
-  projects.push(project);
-  localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(projects));
-  return project;
+export async function createProject(name: string, description?: string): Promise<Project> {
+  const user = getUser();
+  const ownerId = user ? user.id : "";
+  const res = await fetch(`${API_URL}/projects`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, description, ownerId }),
+  });
+  if (!res.ok) throw new Error("Failed to create project");
+  return res.json();
 }
 
-export function deleteProject(id: string) {
-  const projects = getProjects().filter((p) => p.id !== id);
-  localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(projects));
-  const tasks = getTasks().filter((t) => t.projectId !== id);
-  localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
+export async function deleteProject(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/projects/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete project");
 }
 
 // Tasks
-export function getTasks(): Task[] {
-  const raw = localStorage.getItem(STORAGE_KEYS.tasks);
-  return raw ? JSON.parse(raw) : [];
+export async function getAllTasks(): Promise<Task[]> {
+  const user = getUser();
+  const userId = user ? user.id : "";
+  const res = await fetch(`${API_URL}/tasks?userId=${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch tasks");
+  return res.json();
 }
 
-export function getTasksByProject(projectId: string): Task[] {
-  return getTasks().filter((t) => t.projectId === projectId);
+export async function getTasksByProject(projectId: string): Promise<Task[]> {
+  const res = await fetch(`${API_URL}/tasks?projectId=${projectId}`);
+  if (!res.ok) throw new Error("Failed to fetch tasks");
+  return res.json();
 }
 
-export function createTask(data: Omit<Task, "id" | "createdAt">): Task {
-  const tasks = getTasks();
-  const task: Task = { ...data, id: generateId(), createdAt: new Date().toISOString() };
-  tasks.push(task);
-  localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
-  return task;
+export async function createTask(data: Omit<Task, "id" | "createdAt">): Promise<Task> {
+  const res = await fetch(`${API_URL}/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to create task");
+  return res.json();
 }
 
-export function updateTaskStatus(taskId: string, status: TaskStatus) {
-  const tasks = getTasks().map((t) => (t.id === taskId ? { ...t, status } : t));
-  localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
+export async function updateTaskStatus(taskId: string, status: TaskStatus): Promise<Task> {
+  const res = await fetch(`${API_URL}/tasks/${taskId}/status`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error("Failed to update task status");
+  return res.json();
 }
 
-export function deleteTask(taskId: string) {
-  const tasks = getTasks().filter((t) => t.id !== taskId);
-  localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
+export async function deleteTask(taskId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/tasks/${taskId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete task");
 }
