@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  # Frontend using 2 replicas for load-balancing incoming user requests
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          # IMPORTANT: Replace with your actual Docker Hub image name (e.g., your-username/mern-frontend:latest)
+          image: mahir123456/mern-frontend:latest
+          ports:
+            # Nginx inside the Docker container is configured to listen on port 3000
+            - containerPort: 3000
+          env:
+            # Note: Because React/Vite bakes env vars at build-time, you typically need to re-build the Docker 
+            # image against the Kubernetes NodeIP address, or use an Nginx proxy reverse-routing strategy `/api`
+            - name: VITE_API_URL
+              value: "http://<YOUR_KUBERNETES_NODE_IP>:30080/api"

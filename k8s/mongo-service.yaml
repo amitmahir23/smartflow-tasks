@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+spec:
+  # ClusterIP exposes the service on an internal IP in the cluster
+  type: ClusterIP
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017      # Port accessible inside the cluster (used by Backend)
+      targetPort: 27017 # Port the container is listening on

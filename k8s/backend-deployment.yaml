@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  # Backend API using 2 replicas for high availability
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          # IMPORTANT: Replace with your actual Docker Hub image name (e.g., your-username/mern-backend:latest)
+          image: mahir123456/mern-backend:latest
+          ports:
+            - containerPort: 5000  # The Express app runs on port 5000
+          env:
+            # Backend connects to MongoDB using K8s DNS resolution of the 'mongo' service name
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017/appdb"
+            - name: PORT
+              value: "5000"

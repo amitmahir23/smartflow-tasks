@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  labels:
+    app: frontend
+spec:
+  # NodePort to expose the frontend to internet traffic externally outside the Kubernetes cluster
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80         # Exposed port 80 as requested
+      targetPort: 3000 # Directs port 80 to the internal Nginx 3000 port
+      nodePort: 30080  # The specific port you apply in browser (http://<Cluster_IP>:30080)
