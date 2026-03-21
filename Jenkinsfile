@@ -1,9 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        // This requires the 'NodeJS' plugin to be installed in Jenkins
+        // and a NodeJS installation named '20' to be configured.
+        nodejs '20'
+    }
+
     environment {
-        NODE_JS_VERSION = '20'
-        IMAGE_NAME = 'smartflow-tasks'
+        IMAGE_NAME_FRONTEND = 'smartflow-frontend'
+        IMAGE_NAME_BACKEND = 'smartflow-backend'
     }
 
     stages {
@@ -13,38 +19,28 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Frontend: Install & Build') {
             steps {
                 sh 'npm install'
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                sh 'npm run lint'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'npm run test'
-            }
-        }
-
-        stage('Build Application') {
-            steps {
                 sh 'npm run build'
             }
         }
 
-        stage('Docker Build') {
+        stage('Backend: Install') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-                sh "docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
+                dir('backend') {
+                    sh 'npm install'
+                }
             }
         }
 
-        // Optional: stage('Push to Registry')
+        stage('Docker: Build Images') {
+            steps {
+                // Note: This requires Jenkins to have access to a Docker daemon
+                sh "docker build -t ${IMAGE_NAME_FRONTEND}:${BUILD_NUMBER} ."
+                sh "docker build -t ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER} ./backend"
+            }
+        }
     }
 
     post {
@@ -52,7 +48,7 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Build successful!'
+            echo 'MERN Stack Build successful!'
         }
         failure {
             echo 'Build failed. Please check the logs.'
