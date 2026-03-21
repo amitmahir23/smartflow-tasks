@@ -1,11 +1,5 @@
 pipeline {
-    agent any
-
-    tools {
-        // This requires the 'NodeJS' plugin to be installed in Jenkins
-        // and a NodeJS installation named '20' to be configured.
-        nodejs '20'
-    }
+    agent any // Root agent stays 'any' to allow per-stage overrides
 
     environment {
         IMAGE_NAME_FRONTEND = 'smartflow-frontend'
@@ -20,6 +14,12 @@ pipeline {
         }
 
         stage('Frontend: Install & Build') {
+            agent {
+                docker {
+                    image 'node:20-alpine'
+                    reuseNode true
+                }
+            }
             steps {
                 sh 'npm install'
                 sh 'npm run build'
@@ -27,6 +27,12 @@ pipeline {
         }
 
         stage('Backend: Install') {
+            agent {
+                docker {
+                    image 'node:20-alpine'
+                    reuseNode true
+                }
+            }
             steps {
                 dir('backend') {
                     sh 'npm install'
@@ -35,8 +41,8 @@ pipeline {
         }
 
         stage('Docker: Build Images') {
+            // No docker agent here, we use the host's docker CLI
             steps {
-                // Note: This requires Jenkins to have access to a Docker daemon
                 sh "docker build -t ${IMAGE_NAME_FRONTEND}:${BUILD_NUMBER} ."
                 sh "docker build -t ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER} ./backend"
             }
