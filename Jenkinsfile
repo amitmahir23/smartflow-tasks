@@ -1,5 +1,5 @@
 pipeline {
-    agent any // Root agent stays 'any' to allow per-stage overrides
+    agent any
 
     environment {
         IMAGE_NAME_FRONTEND = 'smartflow-frontend'
@@ -14,34 +14,19 @@ pipeline {
         }
 
         stage('Frontend: Install & Build') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    reuseNode true
-                }
-            }
             steps {
-                sh 'npm install'
-                sh 'npm run build'
+                // We use raw docker run commands so you don't need any special Jenkins plugins
+                sh 'docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"'
             }
         }
 
         stage('Backend: Install') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    reuseNode true
-                }
-            }
             steps {
-                dir('backend') {
-                    sh 'npm install'
-                }
+                sh 'docker run --rm -v $(pwd):/app -w /app/backend node:20-alpine sh -c "npm install"'
             }
         }
 
         stage('Docker: Build Images') {
-            // No docker agent here, we use the host's docker CLI
             steps {
                 sh "docker build -t ${IMAGE_NAME_FRONTEND}:${BUILD_NUMBER} ."
                 sh "docker build -t ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER} ./backend"
