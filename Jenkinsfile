@@ -15,14 +15,14 @@ pipeline {
 
         stage('Frontend: Install & Build') {
             steps {
-                // We use raw docker run commands so you don't need any special Jenkins plugins
-                sh 'docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"'
+                // High-compatibility quoting for nested shell commands
+                sh "docker run --rm -v \$(pwd):/app -w /app node:20-alpine sh -c 'npm install && npm run build'"
             }
         }
 
         stage('Backend: Install') {
             steps {
-                sh 'docker run --rm -v $(pwd):/app -w /app/backend node:20-alpine sh -c "npm install"'
+                sh "docker run --rm -v \$(pwd):/app -w /app/backend node:20-alpine sh -c 'npm install'"
             }
         }
 
