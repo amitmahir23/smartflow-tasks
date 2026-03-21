@@ -1,8 +1,53 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  # Frontend Service (React Application) - Communicates with backend via API
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mern_frontend
     ports:
-      - "8080:80"
+      # Expose port 3000 as requested
+      - "3000:3000"
+    environment:
+      # API endpoint for the frontend to communicate with the backend
+      - VITE_API_URL=http://localhost:5000/api
+      - REACT_APP_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
     restart: always
+
+  # Backend Service (Node.js/Express API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mern_backend
+    ports:
+      # Expose port 5000 for the backend API
+      - "5000:5000"
+    environment:
+      # Configure the backend to listen on port 5000
+      - PORT=5000
+      # Connect to MongoDB using the service name 'mongodb' (not localhost)
+      - MONGO_URI=mongodb://mongodb:27017/appdb
+    depends_on:
+      - mongodb
+    restart: always
+
+  # Database Service (MongoDB)
+  mongodb:
+    image: mongo:latest
+    container_name: mern_mongodb
+    ports:
+      # Expose the default MongoDB port
+      - "27017:27017"
+    volumes:
+      # Persist database data even if the container restarts
+      - mongo_data:/data/db
+    restart: always
+
+# Volumes declaration for data persistence
+volumes:
+  mongo_data:
