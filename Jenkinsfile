@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME_FRONTEND = 'smartflow-frontend'
-        IMAGE_NAME_BACKEND = 'smartflow-backend'
+        IMAGE_NAME_FRONTEND = 'mahir123456/mern-frontend'
+        IMAGE_NAME_BACKEND = 'mahir123456/mern-backend'
     }
 
     stages {
@@ -25,6 +25,10 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 sh '''
+                # Dynamically update Kubernetes YAML files to use the newly built image version
+                sed -i "s|image: mahir123456/mern-frontend:.*|image: ${IMAGE_NAME_FRONTEND}:${BUILD_NUMBER}|g" k8s/frontend-deployment.yaml
+                sed -i "s|image: mahir123456/mern-backend:.*|image: ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER}|g" k8s/backend-deployment.yaml
+
                 # Safely copy Windows kubeconfig and route through Docker Desktop networking
                 cp /var/jenkins_home/.kube/config /tmp/kubeconfig || true
                 sed -i 's/127.0.0.1/host.docker.internal/g' /tmp/kubeconfig || true
