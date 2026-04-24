@@ -21,6 +21,12 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME_BACKEND}:${BUILD_NUMBER} ./backend"
             }
         }
+
+        stage('Deploy with Ansible') {
+            steps {
+                sh "ansible-playbook ansible/deploy-k8s.yml"
+            }
+        }
     }
 
     post {

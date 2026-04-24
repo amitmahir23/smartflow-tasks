@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getUser, logoutUser } from "@/lib/store";
 import { User, Project } from "@/lib/types";
 import { LoginScreen } from "@/components/LoginScreen";
@@ -6,6 +7,7 @@ import { ProjectList } from "@/components/ProjectList";
 import { BoardView } from "@/components/BoardView";
 
 const Index = () => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(getUser);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -27,7 +29,11 @@ const Index = () => {
     <ProjectList
       onSelectProject={setSelectedProject}
       userName={user.name}
-      onLogout={() => { logoutUser(); setUser(null); }}
+      onLogout={() => { 
+        logoutUser(); 
+        setUser(null); 
+        queryClient.clear();
+      }}
     />
   );
 };

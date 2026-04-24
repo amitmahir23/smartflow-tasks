@@ -1,0 +1,34 @@
+---
+- name: Deploy smartflow-tasks to Kubernetes
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Apply MongoDB Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/mongo-deployment.yaml
+
+    - name: Apply MongoDB Service
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/mongo-service.yaml
+
+    - name: Apply Backend Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/backend-deployment.yaml
+
+    - name: Apply Backend Service
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/backend-service.yaml
+
+    - name: Apply Frontend Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/frontend-deployment.yaml
+
+    - name: Apply Frontend Service
+      kubernetes.core.k8s:
+        state: present
+        src: ../k8s/frontend-service.yaml
