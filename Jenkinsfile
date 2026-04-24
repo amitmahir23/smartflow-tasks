@@ -28,6 +28,8 @@ pipeline {
                 # Safely copy Windows kubeconfig and route through Docker Desktop networking
                 cp /var/jenkins_home/.kube/config /tmp/kubeconfig || true
                 sed -i 's/127.0.0.1/host.docker.internal/g' /tmp/kubeconfig || true
+                sed -i '/certificate-authority-data/d' /tmp/kubeconfig || true
+                sed -i 's/server: https:\\/\\/host.docker.internal.*/&\\n    insecure-skip-tls-verify: true/g' /tmp/kubeconfig || true
                 export KUBECONFIG=/tmp/kubeconfig
 
                 ansible-playbook ansible/deploy-k8s.yml
