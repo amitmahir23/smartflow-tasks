@@ -24,7 +24,14 @@ pipeline {
 
         stage('Deploy with Ansible') {
             steps {
-                sh "ansible-playbook ansible/deploy-k8s.yml"
+                sh '''
+                # Safely copy Windows kubeconfig and route through Docker Desktop networking
+                cp /var/jenkins_home/.kube/config /tmp/kubeconfig || true
+                sed -i 's/127.0.0.1/host.docker.internal/g' /tmp/kubeconfig || true
+                export KUBECONFIG=/tmp/kubeconfig
+
+                ansible-playbook ansible/deploy-k8s.yml
+                '''
             }
         }
     }

@@ -1,0 +1,24 @@
+FROM jenkins/jenkins:lts
+# Switch to root to install system dependencies
+USER root
+
+# Install Docker CLI and Python logic for Ansible
+RUN apt-get update && \
+    apt-get install -y docker.io python3 python3-pip python3-venv sed && \
+    rm -rf /var/lib/apt/lists/*
+
+# Allow Jenkins user to run docker commands
+RUN groupadd -f docker && usermod -aG docker jenkins || true
+
+# Setup a Python virtual environment for Ansible
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Ansible and the Kubernetes Python client
+RUN pip3 install --no-cache-dir ansible kubernetes passlib
+
+# Drop back to jenkins user
+USER jenkins
+
+# Install the Kubernetes Galaxy Collection for Ansible
+RUN ansible-galaxy collection install kubernetes.core
