@@ -45,6 +45,12 @@
         namespace: default
         src: ../k8s/prometheus.yaml
 
+    - name: Apply Grafana Dashboards ConfigMaps
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        src: ../k8s/grafana-dashboards.yaml
+
     - name: Apply Grafana Deployment & Service
       kubernetes.core.k8s:
         state: present
