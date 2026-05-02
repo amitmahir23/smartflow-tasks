@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     environment {
         IMAGE_NAME_FRONTEND = 'mahir123456/mern-frontend'
         IMAGE_NAME_BACKEND = 'mahir123456/mern-backend'
