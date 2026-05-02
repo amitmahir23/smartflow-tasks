@@ -48,6 +48,34 @@ services:
       - mongo_data:/data/db
     restart: always
 
+  # Prometheus Service (Metrics Scraper)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mern_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: always
+
+  # Grafana Service (Metrics Dashboard)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mern_grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: always
+
 # Volumes declaration for data persistence
 volumes:
   mongo_data:
+  prometheus_data:
+  grafana_data:

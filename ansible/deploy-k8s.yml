@@ -38,3 +38,15 @@
         state: present
         namespace: default
         src: ../k8s/frontend-service.yaml
+
+    - name: Apply Prometheus Deployment & Service
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        src: ../k8s/prometheus.yaml
+
+    - name: Apply Grafana Deployment & Service
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        src: ../k8s/grafana.yaml

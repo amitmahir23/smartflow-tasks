@@ -79,3 +79,9 @@ graph TD
 #### E. Image Tagging Strategy
 *   **Function**: Traceability.
 *   **Integration**: Jenkins injects the `${BUILD_NUMBER}` into the Docker image tag and then uses `sed` to update the Kubernetes YAML files dynamically. This ensures that every deployment is uniquely identifiable and can be rolled back if needed.
+
+#### F. Monitoring Stack (Prometheus & Grafana)
+*   **Function**: Observability, metrics collection, and visualization.
+*   **Integration**:
+    *   **Prometheus**: Configured via a `ConfigMap` to scrape Kubernetes node and pod metrics. Deployed alongside your application to actively poll for performance data.
+    *   **Grafana**: Connects to Prometheus as a data source to provide visual dashboards. Exposed on port `3001` (NodePort) locally to prevent conflicts with your frontend. Both are integrated into the automated Jenkins/Ansible deployment pipeline.
