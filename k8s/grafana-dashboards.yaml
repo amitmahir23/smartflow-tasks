@@ -38,88 +38,22 @@ kind: ConfigMap
 metadata:
   name: grafana-dashboards
 data:
-  k8s-overview.json: |
+  prometheus-overview.json: |
     {
-      "annotations": {
-        "list": []
-      },
-      "editable": true,
-      "fiscalYearStartMonth": 0,
-      "graphTooltip": 0,
-      "links": [],
-      "liveNow": false,
+      "title": "Prometheus System Overview",
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 0
-          },
-          "id": 2,
-          "options": {
-            "reduceOptions": {
-              "calc": "lastNotNull",
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true
-          },
-          "pluginVersion": "10.0.0",
+          "type": "stat",
+          "title": "Prometheus Goroutines (Data is flowing!)",
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "count(kube_pod_info)",
-              "legendFormat": "__auto",
-              "range": true,
+              "expr": "go_goroutines",
               "refId": "A"
             }
-          ],
-          "title": "Total Kubernetes Pods (Requires kube-state-metrics)",
-          "type": "stat"
+          ]
         }
       ],
-      "refresh": "10s",
       "schemaVersion": 38,
-      "style": "dark",
-      "tags": [],
-      "templating": {
-        "list": []
-      },
-      "time": {
-        "from": "now-6h",
-        "to": "now"
-      },
-      "timepicker": {},
-      "timezone": "",
-      "title": "Kubernetes Cluster Overview",
-      "uid": "k8s-overview-1",
-      "version": 1
+      "uid": "prom-overview-1"
     }
