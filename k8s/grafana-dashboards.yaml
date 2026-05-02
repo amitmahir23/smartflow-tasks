@@ -40,20 +40,46 @@ metadata:
 data:
   prometheus-overview.json: |
     {
-      "title": "Prometheus System Overview",
+      "title": "Prometheus System Performance (Live)",
+      "refresh": "10s",
       "panels": [
         {
           "type": "stat",
-          "title": "Prometheus Goroutines (Data is flowing!)",
-          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
-          "targets": [
-            {
-              "expr": "go_goroutines",
-              "refId": "A"
-            }
-          ]
+          "title": "Uptime",
+          "gridPos": { "h": 6, "w": 4, "x": 0, "y": 0 },
+          "targets": [{ "expr": "time() - process_start_time_seconds{job=\"prometheus\"}", "refId": "A" }],
+          "options": { "reduceOptions": { "calc": "lastNotNull" } },
+          "fieldConfig": { "defaults": { "unit": "s", "color": {"mode": "value"} } }
+        },
+        {
+          "type": "stat",
+          "title": "Resident Memory Usage",
+          "gridPos": { "h": 6, "w": 4, "x": 4, "y": 0 },
+          "targets": [{ "expr": "process_resident_memory_bytes{job=\"prometheus\"}", "refId": "A" }],
+          "fieldConfig": { "defaults": { "unit": "bytes", "color": {"mode": "thresholds"} } }
+        },
+        {
+          "type": "stat",
+          "title": "Active Goroutines",
+          "gridPos": { "h": 6, "w": 4, "x": 8, "y": 0 },
+          "targets": [{ "expr": "go_goroutines", "refId": "A" }],
+          "fieldConfig": { "defaults": { "color": {"mode": "value"} } }
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage (Cores)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "targets": [{ "expr": "rate(process_cpu_seconds_total{job=\"prometheus\"}[1m])", "refId": "A", "legendFormat": "CPU Usage" }],
+          "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } }
+        },
+        {
+          "type": "timeseries",
+          "title": "HTTP Requests Per Second",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+          "targets": [{ "expr": "sum(rate(prometheus_http_requests_total[1m])) by (handler)", "refId": "A", "legendFormat": "{{handler}}" }],
+          "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } }
         }
       ],
       "schemaVersion": 38,
-      "uid": "prom-overview-1"
+      "uid": "prom-overview-2"
     }
